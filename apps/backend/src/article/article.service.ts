@@ -177,3 +177,30 @@ export class ArticleService {
     return this.articleRepository.nativeDelete({ slug });
   }
 }
+async createArticle(userId: number, createArticleDto: CreateArticleDto) {
+  const { tagList = [], ...articleData } = createArticleDto;
+
+  const article = this.articleRepository.create({
+    ...articleData,
+    author: await this.userRepository.findOneOrFail({ id: userId })
+  });
+
+  const processedTags = [];
+  for (const rawTag of tagList) {
+    const tagName = rawTag.trim();
+    if (!tagName) continue;
+
+    let tag = await this.tagRepository.findOne({ name: tagName });
+    if (!tag) {
+      tag = this.tagRepository.create({ name: tagName });
+      await this.tagRepository.save(tag);
+    }
+    processedTags.push(tag);
+  }
+
+  article.tags = processedTags;
+  await this.articleRepository.save(article);
+
+  return article;
+}
+
