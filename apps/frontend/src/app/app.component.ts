@@ -32,3 +32,24 @@ export class AppComponent implements OnInit {
       .subscribe(() => this.store.dispatch(authActions.getUser()));
   }
 }
+// Before sending data to the backend, process the tags string
+const tagsString = this.articleForm.value.tags || '';
+const tagList = tagsString
+  .split(',')
+  .map(tag => tag.trim())
+  .filter(tag => tag.length > 0);
+
+const articlePayload = {
+  ...this.articleForm.value,
+  tagList
+};
+
+this.articleService.createArticle(articlePayload).subscribe({
+  next: (article) => {
+    this.router.navigate(['/article', article.slug]);
+  },
+  error: (err) => {
+    console.error('Error creating article:', err);
+  }
+});
+
